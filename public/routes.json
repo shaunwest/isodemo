@@ -1,0 +1,12 @@
+[
+  {
+    "path": "/",
+    "templateUrl": "home.html",
+    "module": "HomeView"
+  },
+  {
+    "path": "/foo",
+    "templateUrl": "foo.html",
+    "module": "FooView"
+  }
+]
