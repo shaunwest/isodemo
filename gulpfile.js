@@ -3,15 +3,18 @@
  */
 
 var gulp = require('gulp');
+var path = require('path');
 var nodemon = require('gulp-nodemon');
 var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
+var tap = require('gulp-tap');
 var karma = require('karma').server;
 var runSequence = require('run-sequence');
 var clean = require('gulp-clean');
 var inject = require('gulp-inject');
 var karmaConfig = __dirname + '/karma.conf.js';
+
 var jsLib = [
   './node_modules/jquery/dist/jquery.js',
   './node_modules/kilo/kilo.js',
@@ -23,23 +26,31 @@ var jsApp = [];
 var serverSources = [
 ];
 
-gulp.task('clean', function() {
-  return gulp.src('public/js', {read: false})
+gulp.task('clean-lib', function() {
+  return gulp.src('./public-dev/js-lib', {read: false})
     .pipe(clean());
 });
 
-gulp.task('build', function() {
+gulp.task('make-lib', ['clean-lib'], function() {
   return gulp.src(jsLib)
-    .pipe(gulp.dest('public/js-src/lib'));
+    .pipe(gulp.dest('./public-dev/js-lib'));
 });
 
-/*gulp.task('inject', function() {
-  var target = gulp.src('./public/index.html');
-  var sources = gulp.src(jsSources, {read: false});
+gulp.task('inject', ['make-lib', 'make-js-manifest'], function() {
+  var target = gulp.src('./public-dev/index.html');
+  var sources = gulp.src(['./public-dev/js-lib/**/*.js', './public-dev/js/**/*.js'], {read: false});
 
-  return target.pipe(inject(sources))
-    .pipe(gulp.dest('./src'));
-});*/
+  return target.pipe(inject(sources, {relative: true}))
+    .pipe(gulp.dest('./public-dev'));
+});
+
+gulp.task('make-js-manifest', function() {
+  return gulp.src(['./public-dev/js/**/*.js'], {read: false})
+    .pipe(tap(function(file, t) {
+      console.log(path.basename(file.path));
+    }));
+  // need to write file
+});
 
 /*gulp.task('build-prod', function() {
   return gulp.src(jsSources)
@@ -82,7 +93,7 @@ gulp.task('prod', function(cb) {
 });
 
 gulp.task('serve', function () {
-  nodemon({ script: 'index.js', ext: 'js html', ignore: [] })
+  nodemon({ script: 'server.js', ext: 'js html', ignore: [] })
     .on('restart', function () {
       console.log('restarted!')
     });
